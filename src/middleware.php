@@ -27,6 +27,30 @@ return function (App $app): void {
         'trim',
         explode(',', $_ENV['CORS_ORIGINS'] ?? '*')
     )));
+
+    // Anti-CSRF (defensa en profundidad): en métodos de escritura, si la petición
+    // trae cabecera Origin, debe estar en la allowlist. Un navegador siempre envía
+    // Origin en una escritura cross-site, así que esto frena CSRF desde otra web.
+    // Si no hay Origin (curl/Postman/servidor) se permite: el JWT es la barrera
+    // principal de /admin/*. Con CORS_ORIGINS='*' (local) se omite por completo.
+    $allowAll = $origins === [] || in_array('*', $origins, true);
+    $app->add(function (Request $request, $handler) use ($app, $origins, $allowAll): Response {
+        $esEscritura = in_array(
+            strtoupper($request->getMethod()),
+            ['POST', 'PUT', 'PATCH', 'DELETE'],
+            true
+        );
+        $origin = $request->getHeaderLine('Origin');
+        if (!$allowAll && $esEscritura && $origin !== '' && !in_array($origin, $origins, true)) {
+            $response = $app->getResponseFactory()->createResponse(403);
+            $response->getBody()->write(json_encode(['error' => 'Origen no permitido']));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        return $handler->handle($request);
+    });
+
     $app->add(new CorsMiddleware([
         'origin'        => $origins === [] ? ['*'] : $origins,
         'methods'       => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
