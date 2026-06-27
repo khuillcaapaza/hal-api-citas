@@ -29,7 +29,7 @@ return function (App $app): void {
     )));
     $app->add(new CorsMiddleware([
         'origin'        => $origins === [] ? ['*'] : $origins,
-        'methods'       => ['GET', 'POST', 'OPTIONS'],
+        'methods'       => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         'headers.allow' => ['Authorization', 'Content-Type'],
         'credentials'   => false,
         'cache'         => 86400,
@@ -56,7 +56,12 @@ return function (App $app): void {
         // Prefijo de la API ('/api' en producción, '' en local) para las reglas
         $base   = rtrim($_ENV['APP_BASE_PATH'] ?? '', '/');
         $paths  = [$base === '' ? '/' : $base];          // proteger toda la API
-        $ignore = [$base . '/login', $base . '/health']; // rutas públicas
+        $ignore = [                                       // rutas públicas
+            $base . '/login',
+            $base . '/health',
+            $base . '/cronogramas',                       // lectura pública (GET)
+            $base . '/areas',                             // lectura pública (GET)
+        ];
 
         $app->add(new JwtAuthentication(
             new Options(isSecure: $secure),               // true = solo HTTPS
