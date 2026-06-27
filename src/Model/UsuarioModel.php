@@ -19,16 +19,16 @@ final class UsuarioModel
         $this->pdo = Database::pdo();
     }
 
-    /** Busca un usuario activo por su nombre de usuario. Null si no existe. */
-    public function buscarActivoPorUsuario(string $usuario): ?array
+    /** Busca un usuario activo por su email. Null si no existe. */
+    public function buscarActivoPorEmail(string $email): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, usuario, nombre, rol, password_hash
+            'SELECT id, usuario, email, nombre, rol, password_hash
                FROM usuarios
-              WHERE usuario = ? AND activo = 1
+              WHERE email = ? AND activo = 1
               LIMIT 1'
         );
-        $stmt->execute([$usuario]);
+        $stmt->execute([$email]);
         $row = $stmt->fetch();
 
         return $row === false ? null : $row;

@@ -82,6 +82,7 @@ return function (App $app): void {
         $paths  = [$base === '' ? '/' : $base];          // proteger toda la API
         $ignore = [                                       // rutas públicas
             $base . '/login',
+            $base . '/login/verify',
             $base . '/health',
             $base . '/cronogramas',                       // lectura pública (GET)
             $base . '/areas',                             // lectura pública (GET)
