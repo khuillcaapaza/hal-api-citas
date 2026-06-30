@@ -12,13 +12,13 @@ use PDO;
  *
  * Las áreas se almacenan como JSON en la columna `areas`.
  */
-final class CronogramaModel
+class CronogramaModel
 {
     private PDO $pdo;
 
-    public function __construct()
+    public function __construct(?PDO $pdo = null)
     {
-        $this->pdo = Database::pdo();
+        $this->pdo = $pdo ?? Database::pdo();
     }
 
     /** Metadatos de los cronogramas publicados (del más reciente al más antiguo). */

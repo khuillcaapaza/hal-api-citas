@@ -24,9 +24,9 @@ final class CronogramaController extends Controller
 
     private CronogramaModel $cronogramas;
 
-    public function __construct()
+    public function __construct(?CronogramaModel $cronogramas = null)
     {
-        $this->cronogramas = new CronogramaModel();
+        $this->cronogramas = $cronogramas ?? new CronogramaModel();
     }
 
     // ── Lectura pública ───────────────────────────────────────────────

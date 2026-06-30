@@ -10,13 +10,13 @@ use PDO;
 /**
  * Acceso a datos del catálogo de áreas de atención (tabla areas_atencion).
  */
-final class AreaModel
+class AreaModel
 {
     private PDO $pdo;
 
-    public function __construct()
+    public function __construct(?PDO $pdo = null)
     {
-        $this->pdo = Database::pdo();
+        $this->pdo = $pdo ?? Database::pdo();
     }
 
     /** Áreas activas, ordenadas por nombre (lectura pública). */

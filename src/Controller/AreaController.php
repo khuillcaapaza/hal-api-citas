@@ -19,9 +19,9 @@ final class AreaController extends Controller
 {
     private AreaModel $areas;
 
-    public function __construct()
+    public function __construct(?AreaModel $areas = null)
     {
-        $this->areas = new AreaModel();
+        $this->areas = $areas ?? new AreaModel();
     }
 
     /** GET /areas — áreas activas (lectura pública). */
