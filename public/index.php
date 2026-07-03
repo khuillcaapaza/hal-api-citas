@@ -28,5 +28,6 @@ if ($basePath !== '') {
 (require __DIR__ . '/../src/routes.php')($app);
 (require __DIR__ . '/../src/routes-cronogramas.php')($app);
 (require __DIR__ . '/../src/routes-areas.php')($app);
+(require __DIR__ . '/../src/routes-users.php')($app);
 
 $app->run();
