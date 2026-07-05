@@ -101,6 +101,29 @@ final class AuthControllerTest extends TestCase
         $this->assertSame('admin@test', $body['email']);
     }
 
+    public function testLoginModoDevDevuelveCodigoSinEnviarCorreo(): void
+    {
+        $_ENV['AUTH_2FA_DEV'] = 'true';
+        $usuarios = $this->createMock(UsuarioModel::class);
+        $usuarios->method('buscarActivoPorEmail')->willReturn($this->usuario());
+        $codigos = $this->createMock(LoginCodigoModel::class);
+        $codigos->expects($this->once())->method('crear');
+        $mailer = $this->createMock(Mailer::class);
+        // En modo desarrollo NO se envía correo.
+        $mailer->expects($this->never())->method('enviar');
+
+        $resp = $this->auth($usuarios, $codigos, $mailer)->login(
+            $this->request('POST', ['email' => 'admin@test', 'password' => 'Secreta123']),
+            $this->response()
+        );
+
+        $body = $this->jsonBody($resp);
+        $this->assertSame(200, $resp->getStatusCode());
+        $this->assertTrue($body['requiere2fa']);
+        $this->assertArrayHasKey('dev_codigo', $body);
+        $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $body['dev_codigo']);
+    }
+
     public function testLoginDevuelve502SiFallaElCorreo(): void
     {
         $usuarios = $this->createMock(UsuarioModel::class);

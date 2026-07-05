@@ -73,6 +73,19 @@ final class AuthController extends Controller
             $expira
         );
 
+        // Modo desarrollo (AUTH_2FA_DEV=true): NO enviar correo y devolver el
+        // código en la respuesta para poder probar el flujo sin SMTP. NUNCA en producción.
+        $dev = filter_var($_ENV['AUTH_2FA_DEV'] ?? 'false', FILTER_VALIDATE_BOOL);
+        if ($dev) {
+            return $this->json($response, [
+                'requiere2fa' => true,
+                'email'       => $user['email'],
+                'expira_en'   => self::CODIGO_TTL,
+                'mensaje'     => 'Modo desarrollo: usa el código mostrado abajo.',
+                'dev_codigo'  => $codigo,
+            ]);
+        }
+
         // Enviar el código por email.
         try {
             $this->enviarCodigo((string) $user['email'], (string) $user['nombre'], $codigo);
