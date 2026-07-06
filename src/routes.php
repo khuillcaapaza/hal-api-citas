@@ -11,8 +11,13 @@ use Slim\App;
  * la lógica está en App\Controller\* (arquitectura MVC).
  */
 return function (App $app): void {
+    // CORS preflight
+    $app->options('/{routes:.+}', function ($request, $response) {
+        return $response;
+    });
+
     $app->get('/health', [HealthController::class, 'index']);
-    $app->post('/login', [AuthController::class, 'login']);
-    $app->post('/login/verify', [AuthController::class, 'verify']);
+
+    // /me: permite al frontend verificar sesión (token emitido por hal-auth-api)
     $app->get('/me', [AuthController::class, 'me']);
 };
