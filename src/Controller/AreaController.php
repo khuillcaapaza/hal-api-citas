@@ -39,9 +39,13 @@ final class AreaController extends Controller
     /** POST /admin/areas — crear un área. */
     public function store(Request $request, Response $response): Response
     {
-        [$campos, $error] = $this->validar((array) $request->getParsedBody());
+        [$campos, $error] = $this->validar((array) $request->getParsedBody(), true);
         if ($error !== null) {
             return $this->json($response, ['error' => $error], 422);
+        }
+
+        if ($this->areas->existeCodigo($campos['codigo'])) {
+            return $this->json($response, ['error' => 'Ya existe un área con ese código.'], 409);
         }
 
         if ($this->areas->existeNombre($campos['nombre'])) {
@@ -53,12 +57,12 @@ final class AreaController extends Controller
         return $this->json($response, ['ok' => true, 'area' => $area], 201);
     }
 
-    /** PUT /admin/areas/{id} — actualizar un área existente. */
+    /** PUT /admin/areas/{id} — actualizar un área existente (el código es inmutable). */
     public function update(Request $request, Response $response, array $args): Response
     {
         $id = (int) $args['id'];
 
-        [$campos, $error] = $this->validar((array) $request->getParsedBody());
+        [$campos, $error] = $this->validar((array) $request->getParsedBody(), false);
         if ($error !== null) {
             return $this->json($response, ['error' => $error], 422);
         }
@@ -88,18 +92,35 @@ final class AreaController extends Controller
 
     /**
      * Valida el cuerpo de creación/edición. Devuelve [campos, error].
+     *
+     * El código solo se valida/incluye al crear ($conCodigo = true); en la
+     * edición es inmutable y nunca forma parte de los campos actualizables.
      */
-    private function validar(array $data): array
+    private function validar(array $data, bool $conCodigo): array
     {
         $nombre = trim((string) ($data['nombre'] ?? ''));
         if ($nombre === '') {
             return [null, 'El nombre del área es obligatorio.'];
         }
 
-        return [[
-            'nombre'      => mb_substr($nombre, 0, 120),
-            'descripcion' => mb_substr(trim((string) ($data['descripcion'] ?? '')), 0, 300),
-            'activo'      => filter_var($data['activo'] ?? true, FILTER_VALIDATE_BOOL) ? 1 : 0,
-        ], null];
+        $campos = [
+            'nombre'          => mb_substr($nombre, 0, 120),
+            'descripcion'     => mb_substr(trim((string) ($data['descripcion'] ?? '')), 0, 300),
+            'sin_restriccion' => filter_var($data['sin_restriccion'] ?? false, FILTER_VALIDATE_BOOL) ? 1 : 0,
+            'activo'          => filter_var($data['activo'] ?? true, FILTER_VALIDATE_BOOL) ? 1 : 0,
+        ];
+
+        if ($conCodigo) {
+            $codigo = strtoupper(trim((string) ($data['codigo'] ?? '')));
+            if ($codigo === '') {
+                return [null, 'El código del área es obligatorio.'];
+            }
+            if (!preg_match('/^[A-Z0-9-]{2,40}$/', $codigo)) {
+                return [null, 'El código solo admite letras, números y guiones (2 a 40 caracteres).'];
+            }
+            $campos = ['codigo' => $codigo] + $campos;
+        }
+
+        return [$campos, null];
     }
 }

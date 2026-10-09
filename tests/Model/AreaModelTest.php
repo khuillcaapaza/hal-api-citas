@@ -12,7 +12,7 @@ final class AreaModelTest extends TestCase
     /** @return array<string,mixed> Fila cruda de BD. */
     private function fila(): array
     {
-        return ['id' => 1, 'nombre' => 'Cardiología', 'descripcion' => 'desc', 'activo' => 1];
+        return ['id' => 1, 'codigo' => 'CARDIO', 'nombre' => 'Cardiología', 'descripcion' => 'desc', 'sin_restriccion' => 0, 'activo' => 1];
     }
 
     public function testActivasMapeaFilas(): void
@@ -63,6 +63,20 @@ final class AreaModelTest extends TestCase
         $this->assertFalse((new AreaModel($pdo))->existeNombre('Cardiología', 1));
     }
 
+    public function testExisteCodigoSinExcepto(): void
+    {
+        $pdo = $this->pdo(prepare: [$this->stmt(['fetchColumn' => 1])]);
+
+        $this->assertTrue((new AreaModel($pdo))->existeCodigo('CARDIO'));
+    }
+
+    public function testExisteCodigoConExcepto(): void
+    {
+        $pdo = $this->pdo(prepare: [$this->stmt(['fetchColumn' => false])]);
+
+        $this->assertFalse((new AreaModel($pdo))->existeCodigo('CARDIO', 1));
+    }
+
     public function testCrearInsertaYDevuelveArea(): void
     {
         // INSERT + encontrar(lastInsertId).
@@ -72,7 +86,7 @@ final class AreaModelTest extends TestCase
         );
 
         $area = (new AreaModel($pdo))->crear([
-            'nombre' => 'Cardiología', 'descripcion' => 'desc', 'activo' => 1,
+            'codigo' => 'CARDIO', 'nombre' => 'Cardiología', 'descripcion' => 'desc', 'sin_restriccion' => 0, 'activo' => 1,
         ]);
 
         $this->assertSame('Cardiología', $area['nombre']);

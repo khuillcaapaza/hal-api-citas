@@ -129,7 +129,7 @@ final class CronogramaControllerTest extends TestCase
                 'areas'  => [
                     [
                         'area'     => 'Cardiología',
-                        'days'     => ['Lunes', 'martes', 'dia-invalido', 'Lunes'],
+                        'dates'    => ['2026-07-06', '2026-07-06', '2026-08-01', 'no-valida'],
                         'time'     => '08:00',
                         'location' => 'Piso 1',
                         'note'     => 'Traer DNI',

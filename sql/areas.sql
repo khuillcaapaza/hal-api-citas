@@ -8,12 +8,15 @@
 
 CREATE TABLE IF NOT EXISTS areas_atencion (
   id              INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  codigo          VARCHAR(40)   NOT NULL,                 -- identificador estable (inmutable)
   nombre          VARCHAR(120)  NOT NULL,
   descripcion     VARCHAR(300)  NOT NULL DEFAULT '',
+  sin_restriccion TINYINT(1)    NOT NULL DEFAULT 0,       -- 1 = atiende todos los días (se omite en la carga masiva)
   activo          TINYINT(1)    NOT NULL DEFAULT 1,
   creado_en       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
                                 ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_areas_codigo (codigo),
   UNIQUE KEY uq_areas_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -24,9 +24,10 @@ CREATE TABLE IF NOT EXISTS cronogramas (
 -- [
 --   {
 --     "area": "Cirugía",
---     "days": ["Martes", "Jueves"],
+--     "dates": ["2026-07-07", "2026-07-21"],
 --     "time": "7:00 a.m.",
 --     "location": "Módulo 1 - Admisión",
 --     "note": null
 --   }
 -- ]
+-- Las fechas son ISO (YYYY-MM-DD) y pertenecen al mes del cronograma.

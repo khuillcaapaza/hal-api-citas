@@ -13,7 +13,7 @@ final class AreaControllerTest extends TestCase
     /** @return array<string,mixed> Área mapeada de ejemplo. */
     private function area(): array
     {
-        return ['id' => 1, 'nombre' => 'Cardiología', 'descripcion' => 'desc', 'activo' => true];
+        return ['id' => 1, 'codigo' => 'CARDIO', 'nombre' => 'Cardiología', 'descripcion' => 'desc', 'sin_restriccion' => false, 'activo' => true];
     }
 
     private function controller(?AreaModel $areas = null): AreaController
@@ -48,13 +48,44 @@ final class AreaControllerTest extends TestCase
         $this->assertSame(422, $resp->getStatusCode());
     }
 
+    public function testStoreCodigoVacio(): void
+    {
+        $resp = $this->controller()->store(
+            $this->request('POST', ['nombre' => 'Cardiología', 'codigo' => '']),
+            $this->response()
+        );
+        $this->assertSame(422, $resp->getStatusCode());
+    }
+
+    public function testStoreCodigoInvalido(): void
+    {
+        $resp = $this->controller()->store(
+            $this->request('POST', ['nombre' => 'Cardiología', 'codigo' => 'con espacios']),
+            $this->response()
+        );
+        $this->assertSame(422, $resp->getStatusCode());
+    }
+
+    public function testStoreCodigoDuplicado(): void
+    {
+        $areas = $this->createMock(AreaModel::class);
+        $areas->method('existeCodigo')->willReturn(true);
+
+        $resp = $this->controller($areas)->store(
+            $this->request('POST', ['nombre' => 'Cardiología', 'codigo' => 'CARDIO']),
+            $this->response()
+        );
+        $this->assertSame(409, $resp->getStatusCode());
+    }
+
     public function testStoreNombreDuplicado(): void
     {
         $areas = $this->createMock(AreaModel::class);
+        $areas->method('existeCodigo')->willReturn(false);
         $areas->method('existeNombre')->willReturn(true);
 
         $resp = $this->controller($areas)->store(
-            $this->request('POST', ['nombre' => 'Cardiología']),
+            $this->request('POST', ['nombre' => 'Cardiología', 'codigo' => 'CARDIO']),
             $this->response()
         );
         $this->assertSame(409, $resp->getStatusCode());
@@ -63,11 +94,12 @@ final class AreaControllerTest extends TestCase
     public function testStoreExitoso(): void
     {
         $areas = $this->createMock(AreaModel::class);
+        $areas->method('existeCodigo')->willReturn(false);
         $areas->method('existeNombre')->willReturn(false);
         $areas->method('crear')->willReturn($this->area());
 
         $resp = $this->controller($areas)->store(
-            $this->request('POST', ['nombre' => 'Cardiología', 'descripcion' => 'desc', 'activo' => true]),
+            $this->request('POST', ['nombre' => 'Cardiología', 'codigo' => 'CARDIO', 'descripcion' => 'desc', 'activo' => true]),
             $this->response()
         );
 

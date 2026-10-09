@@ -17,11 +17,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  */
 final class CronogramaController extends Controller
 {
-    /** Días de la semana canónicos (orden de lunes a domingo). */
-    private const WEEKDAYS = [
-        'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo',
-    ];
-
     private CronogramaModel $cronogramas;
 
     public function __construct(?CronogramaModel $cronogramas = null)
@@ -138,20 +133,19 @@ final class CronogramaController extends Controller
             'titulo'       => mb_substr($titulo, 0, 200),
             'excerpt'      => mb_substr(trim((string) ($data['excerpt'] ?? '')), 0, 500),
             'indicaciones' => trim((string) ($data['indicaciones'] ?? '')),
-            'areas'        => json_encode($this->sanitizeAreas($data['areas'] ?? []), JSON_UNESCAPED_UNICODE),
+            'areas'        => json_encode($this->sanitizeAreas($data['areas'] ?? [], $mes), JSON_UNESCAPED_UNICODE),
             'publicado'    => filter_var($data['publicado'] ?? true, FILTER_VALIDATE_BOOL) ? 1 : 0,
         ], null];
     }
 
     /** Valida y normaliza la lista de áreas recibida. */
-    private function sanitizeAreas($value): array
+    private function sanitizeAreas($value, string $mes): array
     {
         if (!is_array($value)) {
             return [];
         }
 
-        $orden = array_flip(self::WEEKDAYS);
-        $out   = [];
+        $out = [];
         foreach ($value as $item) {
             if (!is_array($item)) {
                 continue;
@@ -161,15 +155,15 @@ final class CronogramaController extends Controller
                 continue;
             }
 
-            $days = [];
-            if (isset($item['days']) && is_array($item['days'])) {
-                foreach ($item['days'] as $d) {
-                    $norm = $this->normalizeWeekday($d);
-                    if ($norm !== null && !in_array($norm, $days, true)) {
-                        $days[] = $norm;
+            $dates = [];
+            if (isset($item['dates']) && is_array($item['dates'])) {
+                foreach ($item['dates'] as $d) {
+                    $iso = $this->normalizeDate($d, $mes);
+                    if ($iso !== null && !in_array($iso, $dates, true)) {
+                        $dates[] = $iso;
                     }
                 }
-                usort($days, static fn($a, $b) => $orden[$a] <=> $orden[$b]);
+                sort($dates); // ISO (YYYY-MM-DD) ordena cronológicamente
             }
 
             $time     = trim((string) ($item['time'] ?? ''));
@@ -178,7 +172,7 @@ final class CronogramaController extends Controller
 
             $out[] = [
                 'area'     => mb_substr($area, 0, 120),
-                'days'     => $days,
+                'dates'    => $dates,
                 'time'     => $time !== '' ? mb_substr($time, 0, 60) : null,
                 'location' => $location !== '' ? mb_substr($location, 0, 120) : null,
                 'note'     => $note !== '' ? mb_substr($note, 0, 200) : null,
@@ -188,21 +182,17 @@ final class CronogramaController extends Controller
         return $out;
     }
 
-    /** Normaliza un día (acepta con/sin tildes y mayúsculas) al valor canónico. */
-    private function normalizeWeekday($value): ?string
+    /** Valida una fecha ISO (YYYY-MM-DD) que pertenezca al mes del cronograma. */
+    private function normalizeDate($value, string $mes): ?string
     {
-        $map = [
-            'lunes'     => 'Lunes',
-            'martes'    => 'Martes',
-            'miercoles' => 'Miércoles',
-            'miércoles' => 'Miércoles',
-            'jueves'    => 'Jueves',
-            'viernes'   => 'Viernes',
-            'sabado'    => 'Sábado',
-            'sábado'    => 'Sábado',
-            'domingo'   => 'Domingo',
-        ];
-
-        return $map[strtolower(trim((string) $value))] ?? null;
+        $s = trim((string) $value);
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m)) {
+            return null;
+        }
+        if (!checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            return null;
+        }
+        // La fecha debe pertenecer al mes del cronograma.
+        return substr($s, 0, 7) === $mes ? $s : null;
     }
 }

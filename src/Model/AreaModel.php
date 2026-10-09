@@ -23,7 +23,7 @@ class AreaModel
     public function activas(): array
     {
         $rows = $this->pdo->query(
-            'SELECT id, nombre, descripcion, activo FROM areas_atencion
+            'SELECT id, codigo, nombre, descripcion, sin_restriccion, activo FROM areas_atencion
               WHERE activo = 1 ORDER BY nombre ASC'
         )->fetchAll();
 
@@ -34,7 +34,7 @@ class AreaModel
     public function todas(): array
     {
         $rows = $this->pdo->query(
-            'SELECT id, nombre, descripcion, activo FROM areas_atencion ORDER BY nombre ASC'
+            'SELECT id, codigo, nombre, descripcion, sin_restriccion, activo FROM areas_atencion ORDER BY nombre ASC'
         )->fetchAll();
 
         return array_map([$this, 'map'], $rows);
@@ -44,7 +44,7 @@ class AreaModel
     public function encontrar(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, nombre, descripcion, activo FROM areas_atencion WHERE id = ?'
+            'SELECT id, codigo, nombre, descripcion, sin_restriccion, activo FROM areas_atencion WHERE id = ?'
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
@@ -68,24 +68,44 @@ class AreaModel
         return $stmt->fetchColumn() !== false;
     }
 
+    /** ¿Existe ya un área con ese código? (opcionalmente excluyendo un id). */
+    public function existeCodigo(string $codigo, ?int $exceptoId = null): bool
+    {
+        if ($exceptoId === null) {
+            $stmt = $this->pdo->prepare('SELECT 1 FROM areas_atencion WHERE codigo = ? LIMIT 1');
+            $stmt->execute([$codigo]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                'SELECT 1 FROM areas_atencion WHERE codigo = ? AND id <> ? LIMIT 1'
+            );
+            $stmt->execute([$codigo, $exceptoId]);
+        }
+
+        return $stmt->fetchColumn() !== false;
+    }
+
     /** Inserta un área y devuelve la fila mapeada. */
     public function crear(array $campos): array
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO areas_atencion (nombre, descripcion, activo)
-             VALUES (:nombre, :descripcion, :activo)'
+            'INSERT INTO areas_atencion (codigo, nombre, descripcion, sin_restriccion, activo)
+             VALUES (:codigo, :nombre, :descripcion, :sin_restriccion, :activo)'
         );
         $stmt->execute($campos);
 
         return $this->encontrar((int) $this->pdo->lastInsertId());
     }
 
-    /** Actualiza un área existente y devuelve la fila mapeada. */
+    /**
+     * Actualiza un área existente y devuelve la fila mapeada.
+     * El código es inmutable: nunca se modifica tras la creación.
+     */
     public function actualizar(int $id, array $campos): array
     {
         $stmt = $this->pdo->prepare(
             'UPDATE areas_atencion
-                SET nombre = :nombre, descripcion = :descripcion, activo = :activo
+                SET nombre = :nombre, descripcion = :descripcion,
+                    sin_restriccion = :sin_restriccion, activo = :activo
               WHERE id = :id'
         );
         $stmt->execute($campos + ['id' => $id]);
@@ -106,10 +126,12 @@ class AreaModel
     private function map(array $row): array
     {
         return [
-            'id'          => (int) $row['id'],
-            'nombre'      => $row['nombre'],
-            'descripcion' => $row['descripcion'] ?? '',
-            'activo'      => (int) $row['activo'] === 1,
+            'id'              => (int) $row['id'],
+            'codigo'          => $row['codigo'] ?? '',
+            'nombre'          => $row['nombre'],
+            'descripcion'     => $row['descripcion'] ?? '',
+            'sin_restriccion' => (int) ($row['sin_restriccion'] ?? 0) === 1,
+            'activo'          => (int) $row['activo'] === 1,
         ];
     }
 }
