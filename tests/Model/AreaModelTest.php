@@ -34,6 +34,16 @@ final class AreaModelTest extends TestCase
         $this->assertSame('desc', $areas[0]['descripcion']);
     }
 
+    public function testSinRestriccionActivasDevuelveNombres(): void
+    {
+        $pdo = $this->pdo(query: [$this->stmt(['fetchAll' => ['Geriatria', 'Pediatría']])]);
+
+        $this->assertSame(
+            ['Geriatria', 'Pediatría'],
+            (new AreaModel($pdo))->sinRestriccionActivas()
+        );
+    }
+
     public function testEncontrarDevuelveArea(): void
     {
         $pdo  = $this->pdo(prepare: [$this->stmt(['fetch' => $this->fila()])]);

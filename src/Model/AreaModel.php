@@ -40,6 +40,17 @@ class AreaModel
         return array_map([$this, 'map'], $rows);
     }
 
+    /** Nombres de áreas activas de atención diaria (sin restricción de fecha). */
+    public function sinRestriccionActivas(): array
+    {
+        $rows = $this->pdo->query(
+            'SELECT nombre FROM areas_atencion
+              WHERE sin_restriccion = 1 AND activo = 1 ORDER BY nombre ASC'
+        )->fetchAll(PDO::FETCH_COLUMN);
+
+        return array_map('strval', $rows);
+    }
+
     /** Devuelve un área mapeada por id, o null si no existe. */
     public function encontrar(int $id): ?array
     {

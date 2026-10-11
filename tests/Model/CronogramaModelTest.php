@@ -99,7 +99,7 @@ final class CronogramaModelTest extends TestCase
         $stmt->expects($this->once())->method('execute');
         (new CronogramaModel($this->pdo(prepare: [$stmt])))->crear([
             'mes' => '2026-07', 'titulo' => 'T', 'excerpt' => '', 'indicaciones' => '',
-            'areas' => '[]', 'publicado' => 1,
+            'titulo_sin_restriccion' => '', 'areas' => '[]', 'publicado' => 1,
         ]);
     }
 
@@ -167,7 +167,7 @@ final class CronogramaModelTest extends TestCase
     {
         return [
             'mes' => '2026-07', 'titulo' => 'T', 'excerpt' => '', 'indicaciones' => '',
-            'areas' => '[]', 'publicado' => 1,
+            'titulo_sin_restriccion' => '', 'areas' => '[]', 'publicado' => 1,
         ];
     }
 }

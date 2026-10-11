@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS cronogramas (
   titulo          VARCHAR(200)  NOT NULL,
   excerpt         VARCHAR(500)  NOT NULL DEFAULT '',
   indicaciones    TEXT          NULL,                     -- notas en texto/markdown
+  titulo_sin_restriccion VARCHAR(200) NOT NULL DEFAULT '', -- título de la sección "cupos todos los días"
   areas           LONGTEXT      NOT NULL,                 -- JSON: lista de áreas
   publicado       TINYINT(1)    NOT NULL DEFAULT 1,
   creado_en       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,

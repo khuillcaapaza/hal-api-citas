@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\AreaModel;
 use App\Model\CronogramaModel;
 use App\Support\Controller;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -18,10 +19,12 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 final class CronogramaController extends Controller
 {
     private CronogramaModel $cronogramas;
+    private AreaModel $areas;
 
-    public function __construct(?CronogramaModel $cronogramas = null)
+    public function __construct(?CronogramaModel $cronogramas = null, ?AreaModel $areas = null)
     {
         $this->cronogramas = $cronogramas ?? new CronogramaModel();
+        $this->areas = $areas ?? new AreaModel();
     }
 
     // ── Lectura pública ───────────────────────────────────────────────
@@ -39,6 +42,8 @@ final class CronogramaController extends Controller
         if ($cronograma === null) {
             return $this->json($response, ['error' => 'Cronograma no encontrado'], 404);
         }
+
+        $cronograma['sinRestriccion'] = $this->areas->sinRestriccionActivas();
 
         return $this->json($response, ['cronograma' => $cronograma]);
     }
@@ -58,6 +63,8 @@ final class CronogramaController extends Controller
         if ($cronograma === null) {
             return $this->json($response, ['error' => 'Cronograma no encontrado'], 404);
         }
+
+        $cronograma['sinRestriccion'] = $this->areas->sinRestriccionActivas();
 
         return $this->json($response, ['cronograma' => $cronograma]);
     }
@@ -133,6 +140,7 @@ final class CronogramaController extends Controller
             'titulo'       => mb_substr($titulo, 0, 200),
             'excerpt'      => mb_substr(trim((string) ($data['excerpt'] ?? '')), 0, 500),
             'indicaciones' => trim((string) ($data['indicaciones'] ?? '')),
+            'titulo_sin_restriccion' => mb_substr(trim((string) ($data['tituloSinRestriccion'] ?? '')), 0, 200),
             'areas'        => json_encode($this->sanitizeAreas($data['areas'] ?? [], $mes), JSON_UNESCAPED_UNICODE),
             'publicado'    => filter_var($data['publicado'] ?? true, FILTER_VALIDATE_BOOL) ? 1 : 0,
         ], null];

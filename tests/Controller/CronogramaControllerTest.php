@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Controller;
 
 use App\Controller\CronogramaController;
+use App\Model\AreaModel;
 use App\Model\CronogramaModel;
 use Tests\TestCase;
 
@@ -21,7 +22,10 @@ final class CronogramaControllerTest extends TestCase
 
     private function controller(?CronogramaModel $cronogramas = null): CronogramaController
     {
-        return new CronogramaController($cronogramas ?? $this->createMock(CronogramaModel::class));
+        return new CronogramaController(
+            $cronogramas ?? $this->createMock(CronogramaModel::class),
+            $this->createMock(AreaModel::class)
+        );
     }
 
     // ── Lectura pública ───────────────────────────────────────────────

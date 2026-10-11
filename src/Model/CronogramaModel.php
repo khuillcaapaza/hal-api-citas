@@ -77,8 +77,8 @@ class CronogramaModel
     public function crear(array $campos): void
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO cronogramas (mes, titulo, excerpt, indicaciones, areas, publicado)
-             VALUES (:mes, :titulo, :excerpt, :indicaciones, :areas, :publicado)'
+            'INSERT INTO cronogramas (mes, titulo, excerpt, indicaciones, titulo_sin_restriccion, areas, publicado)
+             VALUES (:mes, :titulo, :excerpt, :indicaciones, :titulo_sin_restriccion, :areas, :publicado)'
         );
         $stmt->execute($campos);
     }
@@ -92,6 +92,7 @@ class CronogramaModel
         $stmt = $this->pdo->prepare(
             'UPDATE cronogramas
                 SET titulo = :titulo, excerpt = :excerpt, indicaciones = :indicaciones,
+                    titulo_sin_restriccion = :titulo_sin_restriccion,
                     areas = :areas, publicado = :publicado
               WHERE mes = :mes_actual'
         );
@@ -99,6 +100,7 @@ class CronogramaModel
             'titulo'       => $campos['titulo'],
             'excerpt'      => $campos['excerpt'],
             'indicaciones' => $campos['indicaciones'],
+            'titulo_sin_restriccion' => $campos['titulo_sin_restriccion'],
             'areas'        => $campos['areas'],
             'publicado'    => $campos['publicado'],
             'mes_actual'   => $mes,
@@ -152,6 +154,7 @@ class CronogramaModel
             'titulo'       => $row['titulo'],
             'excerpt'      => $row['excerpt'],
             'indicaciones' => $row['indicaciones'] ?? '',
+            'tituloSinRestriccion' => $row['titulo_sin_restriccion'] ?? '',
             'areas'        => $areas,
             'publicado'    => (int) $row['publicado'] === 1,
             'actualizado'  => $row['actualizado_en'] ?? null,
